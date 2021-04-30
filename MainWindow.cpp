@@ -21,12 +21,6 @@ MainWindow::MainWindow(QWidget *parent)
 
 	LocationLayout *ll = new LocationLayout(ui.widget_right, 1347, 363);
 
-	{
-		
-	}
-
-
-
 	QList<QRect> lstRect;
 	lstRect.append(QRect(105, 88, 65, 81));
 	lstRect.append(QRect(105, 185, 65, 81));
@@ -38,10 +32,16 @@ MainWindow::MainWindow(QWidget *parent)
 
 	foreach(QRect rc, lstRect)
 	{
-		QPushButton *button = new QPushButton(this);
-		button->setStyleSheet("border-image: url(:/images/camera_65x81_pressed.png);");
-		ll->addWidget(button, rc);
+		QPushButton *button = new QPushButton(tr("Layout"), this);
+		button->setProperty("level", "camera_65x81_pressed");
+		//button->setStyleSheet("border-image: url(:/images/camera_65x81_pressed.png);");
+		ll->addWidget(button, rc, "buttonFont", 16);
 	}
+
+	this->setStyleSheet("QPushButton[level='camera_65x81_pressed']{\
+					border-image: url(:/images/camera_65x81_pressed.png);\
+					text-align: bottom;}");
+
 
 	lstRect.clear();
 	lstRect.append(QRect(206, 94, 269, 164));

@@ -52,15 +52,35 @@ public:
 	QRect rect() const;
 	void setRect(const QRect &rc);
 
+	const QString &fontStyleName() const;
+	void setFontStyleName(const QString &text);
+
+	int pixelSize() const;
+	void setPixelSize(int n);
+
+	int minPixelSize() const;
+	void setMinPixelSize(int n);
+
+	int maxPixelSize() const;
+	void setMaxPixelSize(int n);
+
 private:
 	QLayoutItem *m_item;
 	QRect m_rc;
+
+	//font size
+	QString m_fontStyleName;
+	int m_pixelSize;
+	int m_minPixelSize;
+	int m_maxPixelSize;
 };
 
 LocationLayoutItem::LocationLayoutItem(QLayoutItem *item)
 	: m_item(item)
+	, m_pixelSize(0)
+	, m_minPixelSize(0)
+	, m_maxPixelSize(0)
 {
-
 }
 
 inline QLayoutItem *LocationLayoutItem::item() const {
@@ -75,6 +95,33 @@ inline void LocationLayoutItem::setRect(const QRect &rc) {
 	m_rc = rc;
 }
 
+inline const QString &LocationLayoutItem::fontStyleName() const {
+	return m_fontStyleName;
+}
+inline void LocationLayoutItem::setFontStyleName(const QString &text) {
+	m_fontStyleName = text;
+}
+
+inline int LocationLayoutItem::pixelSize() const {
+	return m_pixelSize;
+}
+inline void LocationLayoutItem::setPixelSize(int n) {
+	m_pixelSize = n;
+}
+
+inline int LocationLayoutItem::minPixelSize() const {
+	return m_minPixelSize;
+}
+inline void LocationLayoutItem::setMinPixelSize(int n) {
+	m_minPixelSize = n;
+}
+
+inline int LocationLayoutItem::maxPixelSize() const {
+	return m_maxPixelSize;
+}
+inline void LocationLayoutItem::setMaxPixelSize(int n) {
+	m_maxPixelSize = n;
+}
 
 //! [1]
 LocationLayout::LocationLayout(QWidget *parent, int w, int h, int margin)
@@ -102,9 +149,27 @@ LocationLayout::~LocationLayout()
 void LocationLayout::addWidget(QWidget *w, const QRect &rc)
 {
 	QLayout::addWidget(w);
-	itemList.last()->setRect(rc);
+	LocationLayoutItem *item = itemList.last();
+	item->setRect(rc);
 }
 
+void LocationLayout::addWidget(QWidget *w, const QRect &rc, const QString &fontStyleName, int pixelSize, int minPixelSize, int maxPixelSize)
+{
+	QLayout::addWidget(w);
+	LocationLayoutItem *item = itemList.last();
+	item->setRect(rc);
+	item->setFontStyleName(fontStyleName);
+	item->setPixelSize(pixelSize);
+	item->setMinPixelSize(minPixelSize);
+	item->setMaxPixelSize(maxPixelSize);
+	if (!fontStyleName.isEmpty())
+		w->setProperty("fontStyle", fontStyleName);
+}
+
+void LocationLayout::addWidget(QWidget *w, const QRect &rc, const QString &fontStyleName, int pixelSize)
+{
+	addWidget(w, rc, fontStyleName, pixelSize, pixelSize > 6 ? 6 : pixelSize, pixelSize);
+}
 
 //! [3]
 void LocationLayout::addItem(QLayoutItem *item)
@@ -190,19 +255,35 @@ int LocationLayout::doLayout(const QRect &rect, bool testOnly) const
 	{
 		double wRatio = (effectiveRect.width() * 1.0) / (m_wOriginal * 1.0);
 		double hRatio = (effectiveRect.height() * 1.0) / (m_hOriginal * 1.0);
-		foreach(LocationLayoutItem *litem, itemList) {
-			QLayoutItem *item = litem->item();
-			QRect rcOriginal = litem->rect();
-			QWidget *wid = item->widget();
-		
-			int x = wRatio * rcOriginal.left();
-			int y = hRatio * rcOriginal.top();
-			
-			int w = wRatio * rcOriginal.width();
-			int h = hRatio * rcOriginal.height();
+		foreach(LocationLayoutItem *item, itemList) {
+			QWidget *wid = item->item()->widget();
+			if (wid)
+			{
+				QRect rcOriginal = item->rect();
 
-			if (item->widget())
-				item->widget()->setGeometry(QRect(effectiveRect.left() + x, effectiveRect.top() + y, w, h));
+				int x = wRatio * rcOriginal.left();
+				int y = hRatio * rcOriginal.top();
+
+				int w = wRatio * rcOriginal.width();
+				int h = hRatio * rcOriginal.height();
+				wid->setGeometry(QRect(effectiveRect.left() + x, effectiveRect.top() + y, w, h));
+
+				if (!item->fontStyleName().isEmpty() && item->pixelSize() > 0 && item->minPixelSize() > 0 && item->maxPixelSize() > 0)
+				{
+					double dRatio = qMin(wRatio, hRatio);
+					int newPixelSize = dRatio * item->pixelSize();
+
+					if (newPixelSize < item->minPixelSize())
+						newPixelSize = item->minPixelSize();
+
+					if (newPixelSize > item->maxPixelSize())
+						newPixelSize = item->maxPixelSize();
+
+					QString className = wid->metaObject()->className();
+					wid->setStyleSheet(QString("%1[fontStyle=\"%2\"]{font-size: %3px;}")
+						.arg(className).arg(item->fontStyleName()).arg(newPixelSize));
+				}
+			}
 		}
 	}
 	return effectiveRect.y() + lineHeight + bottom;

@@ -55,6 +55,8 @@ public:
     ~LocationLayout();
 
 	void addWidget(QWidget *w, const QRect &rc);
+	void addWidget(QWidget *w, const QRect &rc, const QString &fontStyleName, int pixelSize);
+	void addWidget(QWidget *w, const QRect &rc, const QString &fontStyleName, int pixelSize, int minPixelSize, int maxPixelSize);
     void addItem(QLayoutItem *item) Q_DECL_OVERRIDE;
 
     bool hasHeightForWidth() const Q_DECL_OVERRIDE;
