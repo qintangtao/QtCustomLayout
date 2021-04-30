@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/camera_65x81_pressed.png</file>
+        <file>images/camera_bk_1347x363.png</file>
+        <file>images/group_title_bk.png</file>
+    </qresource>
+</RCC>
